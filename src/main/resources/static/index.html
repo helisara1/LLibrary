@@ -50,6 +50,14 @@
       <tbody id="bookBody"></tbody>
     </table>
   </section>
+  <!-- Delete Book -->
+<section>
+  <h2>Delete Book</h2>
+  <form id="deleteForm" onsubmit="deleteBookById(event)">
+    <input type="number" id="deleteId" placeholder="Enter Book ID" required>
+    <button type="submit">Delete</button>
+  </form>
+</section>
 
 <script>
 async function addBook(e) {
@@ -115,10 +123,33 @@ function displayBooks(books) {
       <td>${escapeHtml(b.title)}</td>
       <td>${escapeHtml(b.author)}</td>
       <td>${escapeHtml(b.isbn ?? '')}</td>
+      
     `;
     body.appendChild(tr);
   });
 }
+
+async function deleteBookById(e) {
+  e.preventDefault();
+  const id = document.getElementById('deleteId').value.trim();
+  if (!id) return;
+
+  if (!confirm(`Are you sure you want to delete book ID ${id}?`)) return;
+
+  try {
+    const res = await fetch('/books/' + id, { method: 'DELETE' });
+    const msgText = await res.text();
+    msg.textContent = msgText;
+    msg.style.color = res.ok ? 'green' : 'red';
+    loadBooks();
+    deleteForm.reset();
+  } catch (err) {
+    msg.textContent = 'Error: ' + err.message;
+    msg.style.color = 'red';
+  }
+}
+
+
 
 function escapeHtml(s){
   return s == null ? '' : s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');

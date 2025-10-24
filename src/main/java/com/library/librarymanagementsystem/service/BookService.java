@@ -10,6 +10,7 @@ import com.library.librarymanagementsystem.repository.BookRepository;
 
 @Service
 public class BookService {
+
     @Autowired
     private BookRepository repo;
 
@@ -23,5 +24,14 @@ public class BookService {
 
     public List<Book> searchBooks(String title) {
         return repo.findByTitleContainingIgnoreCase(title);
+    }
+
+    public String deleteBook(Long id) {
+        if (repo.existsById(id)) {
+            repo.deleteById(id);
+            return "Book deleted successfully";
+        } else {
+            return "Book not found";
+        }
     }
 }

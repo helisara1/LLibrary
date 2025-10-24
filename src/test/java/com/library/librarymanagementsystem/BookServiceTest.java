@@ -20,4 +20,21 @@ class BookServiceTest {
         Book saved = service.addBook(book);
         assertThat(saved.getId()).isNotNull();
     }
+    @Test
+void deleteBookTest() {
+    // Add a temporary book
+    Book book = new Book("Temp Book", "Author", "9999");
+    Book saved = service.addBook(book);
+
+    // Delete the book
+    String result = service.deleteBook(saved.getId());
+    assertThat(result).isEqualTo("Book deleted successfully");
+
+    // Try deleting again
+    String result2 = service.deleteBook(saved.getId());
+    assertThat(result2).isEqualTo("Book not found");
 }
+
+
+}
+
