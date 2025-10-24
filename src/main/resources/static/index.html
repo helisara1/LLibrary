@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Library Management System</title>
+  <style>
+    body { font-family: Arial; margin: 30px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+    h2 { color: #2c3e50; }
+    input, button { margin: 5px; padding: 5px; }
+    #msg { color: green; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>📚 Library Management System</h1>
+
+  <!-- Add Book -->
+  <section>
+    <h2>Add Book</h2>
+    <form id="bookForm" onsubmit="addBook(event)">
+      <input type="text" id="title" placeholder="Title" required>
+      <input type="text" id="author" placeholder="Author" required>
+      <input type="text" id="isbn" placeholder="ISBN">
+      <button type="submit">Add</button>
+    </form>
+    <p id="msg"></p>
+  </section>
+
+  <hr>
+
+  <!-- Search -->
+  <section>
+    <h2>Search Books</h2>
+    <input type="text" id="search" placeholder="Enter title to search">
+    <button onclick="searchBooks()">Search</button>
+  </section>
+
+  <!-- List -->
+  <section>
+    <h2>Book List</h2>
+    <button onclick="loadBooks()">Refresh List</button>
+    <table id="bookTable">
+      <thead>
+        <tr>
+          <th>ID</th><th>Title</th><th>Author</th><th>ISBN</th>
+        </tr>
+      </thead>
+      <tbody id="bookBody"></tbody>
+    </table>
+  </section>
+
+<script>
+async function addBook(e) {
+  e.preventDefault();
+  const payload = {
+    title: title.value.trim(),
+    author: author.value.trim(),
+    isbn: isbn.value.trim()
+  };
+  try {
+    const res = await fetch('/books', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Failed to add book');
+    const data = await res.json();
+    msg.textContent = `Book added: ${data.title}`;
+    msg.style.color = 'green';
+    loadBooks();
+    bookForm.reset();
+  } catch (err) {
+    msg.textContent = 'Error: ' + err.message;
+    msg.style.color = 'red';
+  }
+}
+
+async function loadBooks() {
+  const res = await fetch('/books');
+  const books = await res.json();
+  displayBooks(books);
+}
+
+async function searchBooks() {
+  const q = document.getElementById('search').value.trim();
+  if (!q) { 
+    loadBooks(); 
+    msg.textContent = '';
+    return; 
+  }
+
+  const res = await fetch('/books/search?title=' + encodeURIComponent(q));
+  const books = await res.json();
+  
+  if (books.length === 0) {
+    msg.textContent = 'Book not found';
+    msg.style.color = 'red';
+    document.getElementById('bookBody').innerHTML = '';
+  } else {
+    msg.textContent = `Found ${books.length} book(s)`;
+    msg.style.color = 'green';
+    displayBooks(books);
+  }
+}
+
+function displayBooks(books) {
+  const body = document.getElementById('bookBody');
+  body.innerHTML = '';
+  books.forEach(b => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${b.id ?? ''}</td>
+      <td>${escapeHtml(b.title)}</td>
+      <td>${escapeHtml(b.author)}</td>
+      <td>${escapeHtml(b.isbn ?? '')}</td>
+    `;
+    body.appendChild(tr);
+  });
+}
+
+function escapeHtml(s){
+  return s == null ? '' : s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+}
+
+// load data when opening
+window.onload = loadBooks;
+</script>
+</body>
+</html>
